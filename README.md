@@ -13,12 +13,15 @@ Thank you
 - Once bug in the API for large advanced searches is fixes, switch to advanced searches from smart groups.
 
 ### HOW TO USE
-1. Make an API user and give it these rights:
+1. Make an JSS User Account and give it these API rights:
   * Create/Read Computer Smart Groups
   * Create/Read Mobile Device Smart Groups
   * Update Computer records
   * Update Mobile Device records
 
 2. Save a csv file of your serial numbers and asset tags. Format is assettag,serialnumber. In other words, the first column is the asset tag and the second is the serialnumber.
-3. Run the python script - be patient, this could take a while. Creating the groups can take a long time in large environments. Touching each record isn't blazing fast either but I did put in a progress counter ;)
-4. Profit?
+3. Run the jss-importer.py script - be patient, this could take a while. Creating the groups can take a long time in large environments. Touching each record isn't blazing fast either but I did put in a progress counter ;)
+
+Open Terminal and run: `python path/to/jss-importer.py`
+
+
