@@ -4,7 +4,7 @@ JSS Asset Tag Importer - Get those asset tags into your Casper JSS. For Mobile D
 ## Authored by Brad Schmidt @bradschm on 12/29/2015
 
 ### DISCLAIMER
-I am not providing any kind of warranty. This has been throughouly tested in my enviroments but I cannot guarantee that this script is not without bugs.
+I am not providing any kind of warranty. This has been thoroughly tested in my environments but I cannot guarantee that this script is not without bugs.
 Thank you
 
 ### TODOS
