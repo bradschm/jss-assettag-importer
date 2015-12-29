@@ -20,6 +20,7 @@ For more detailed instructions, check out the [Quickstart] (https://github.com/b
   * Create/Read Mobile Device Smart Groups
   * Update Computer records
   * Update Mobile Device records
+  * Update User records
 2. Save a csv file of your serial numbers and asset tags. Format is assettag,serialnumber. In other words, the first column is the asset tag and the second is the serialnumber.
 3. Run the jss-importer.py script - be patient, this could take a while. Creating the groups can take a long time in large environments. Touching each record isn't blazing fast either but I did put in a progress counter ;)
 
