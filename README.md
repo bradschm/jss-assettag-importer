@@ -22,6 +22,6 @@ Thank you
 2. Save a csv file of your serial numbers and asset tags. Format is assettag,serialnumber. In other words, the first column is the asset tag and the second is the serialnumber.
 3. Run the jss-importer.py script - be patient, this could take a while. Creating the groups can take a long time in large environments. Touching each record isn't blazing fast either but I did put in a progress counter ;)
 
-> Example command to execute: Open Terminal and run: `python path/to/jss-importer.py`
+> Example command to execute: Open Terminal and run: `python path/to/jss-assettag-importer.py`
 
 
