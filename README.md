@@ -13,6 +13,7 @@ Thank you
 - Once bug in the API for large advanced searches is fixes, switch to advanced searches from smart groups.
 
 ### HOW TO USE
+For more detailed instructions, check out the [Quickstart] (https://github.com/bradschm/jss-assettag-importer/wiki/Quickstart)   
 1. Make an JSS User Account and give it these API rights:
   * Create/Read Computer Smart Groups
   * Create/Read Mobile Device Smart Groups
