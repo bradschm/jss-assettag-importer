@@ -8,9 +8,9 @@ I am not providing any kind of warranty. This has been throughouly tested in my 
 Thank you
 
 ### TODOS
-Add more logging (Actual logging instead of print)
-Add gui? Prompt for values and file location
-Once bug in the API for large advanced searches is fixes, switch to advanced searches from smart groups.
+- Add more logging (Actual logging instead of print)
+- Add gui? Prompt for values and file location
+- Once bug in the API for large advanced searches is fixes, switch to advanced searches from smart groups.
 
 ### HOW TO USE
 1. Make an API user and give it these rights:
