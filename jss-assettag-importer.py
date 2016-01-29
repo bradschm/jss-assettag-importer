@@ -105,7 +105,7 @@ def mobileDevices():
             print "Submitting %s of %s devices" % (counter,mobileDevicesTotal)
     print "---Finished importing asset tags for Mobile Devices---"
 
-# Start the Mobile Device import
+# Start the Computer import
 def computers():
     print "---Starting the Computer pass---"
 
