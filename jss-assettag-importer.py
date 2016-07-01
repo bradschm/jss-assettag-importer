@@ -1,12 +1,17 @@
+import os
+import csv
+import requests
+
 #####################################################
-# JSS Asset Tag importer - v.2
+# JSS Asset Tag importer - v.3
 # Import Asset tags from a csv into your Casper JSS
 # Authored by Brad Schmidt @bradschm on 12/29/2015
 #####################################################
 
 #####################################################
 # DISCLAIMER
-# I am not providing any kind of warranty. This has been thoroughly tested in my environments but I cannot guarantee that this script is not without bugs.
+# I am not providing any kind of warranty. This has been thoroughly tested in
+# my environments but I cannot guarantee that this script is not without bugs.
 # Thank you
 #####################################################
 
@@ -36,17 +41,22 @@
 #####################################################
 
 #####################################################
-# TODOS
+# TODO
 # Add more logging (Actual logging instead of print)
 # Add gui? Prompt for values and file location
-# Once bug in the API for large advanced searches is fixes, switch to advanced searches from smart groups.
+# Once bug in the API for large advanced searches is fixes, switch to advanced
+# searches from smart groups.
 #####################################################
 
 #####################################################
 # HOW TO USE
 # 1. Make an API user and give it the rights specified BELOW
-# 2. Save a csv file of your serial numbers and asset tags. Format is assettag,serialnumber. In other words, the first column is the asset tag and the second is the serialnumber.
-# 3. Run the python script - be patient, this could take a while. Creating the groups can take a long time in large environments. Touching each record isn't blazing fast either but I did put in a progress counter ;)
+# 2. Save a csv file of your serial numbers and asset tags. Format is assettag,
+# serialnumber. In other words, the first column is the asset tag and the
+# second is the serialnumber.
+# 3. Run the python script - be patient, this could take a while. Creating the
+# groups can take a long time in large environments. Touching each record
+# isn't blazing fast either but I did put in a progress counter ;)
 # 4. Profit?
 #####################################################
 
@@ -54,152 +64,174 @@
 # HARD CODED VALUES
 
 # JSS URL
-jss_host = "https://jss.com"
-jss_port = "8443"
-jss_path = "" #Example: "jss" for a JSS at https://www.company.com:8443/jss
+JSS_HOST = "http://127.0.0.1"
+JSS_PORT = "8080"
+JSS_PATH = ""  # Example: "jss" for a JSS at https://www.company.com:8443/jss
 
 # API User needs the following rights:
-####### 1. Create/Read Computer Smart Groups
-####### 2. Create/Read Mobile Device Smart Groups
-####### 3. Update Computer records
-####### 4. Update Mobile Device records
+# 1. Create/Read Computer Smart Groups
+# 2. Create/Read Mobile Device Smart Groups
+# 3. Update Computer records
+# 4. Update Mobile Device records
 
 # JSS API Username and Password
-jss_username = "api_user"
-jss_password = "potato"
+JSS_USERNAME = "api_user"
+JSS_PASSWORD = "potato"
 
 # Place the csv in the same directory as the script.
-csv_file_name = 'filename.csv'
+CSV_FILE_NAME = 'filename.csv'
 
-# Turn on or off device types False turns it off, True turns it on. 
-computersMode = True
-# computersMode = False
-mobileDevicesMode = True
-# mobileDevicesMode = False
-
-#####################################################
+# Turn on or off device types False turns it off, True turns it on.
+COMPUTERSMODE = True
+# COMPUTERSMODE = False
+MOBILEDEVICESMODE = True
+# MOBILEDEVICESMODE = False
 
 #####################################################
-#####################################################
-#####################################################
-#### You should not need to edit below this line ####
-#####################################################
-#####################################################
+# You should not need to edit below this line #
 #####################################################
 
-# Import required libraries
-import requests
-import csv
-import os
 
-# Start the Mobile Device import
-def mobileDevices():
-    if mobileDevicesMode == True:
+def _mobile_devices():
+    """Starts the mobile device process"""
+    if MOBILEDEVICESMODE:
         print "---Starting the Mobile Device pass---"
-        mobileDevices,status_code = getMobileDevices()
-        if len(mobileDevices) != 0:
-            if status_code == 200:
-                print "Got some mobile devices back!"
+        mobiledevices, status_code = get_mobile_devices()
+        if mobiledevices is not None:
+            if len(mobiledevices) != 0:
+                if status_code == 200:
+                    print "Got some mobile devices back!"
 
+                mobiledevicestotal = len(mobiledevices)
+                counter = 0
+                for device in mobiledevices:
+                    serialnumber = device.get("serial_number")
+                    assettag = asset_lookup(serialnumber)
+                    update_mobile_device_inventory(serialnumber, assettag)
+                    counter += 1
+                    print "Submitting %s of %s devices" % (counter, mobiledevicestotal)
+                print "---Finished importing asset tags for Mobile Devices---"
             else:
-                createMobileDeviceGroup()
-
-            mobileDevicesTotal = len(mobileDevices)
-            counter = 0
-            for md in mobileDevices:
-                    serialNumber = md.get("serial_number")
-                    assetTag = assetLookup(serialNumber)
-                    updateMobileDeviceInventory(serialNumber,assetTag)
-                    counter = counter + 1
-                    print "Submitting %s of %s devices" % (counter,mobileDevicesTotal)
-            print "---Finished importing asset tags for Mobile Devices---"
+                print "No Mobile Devices Found"
         else:
-            print "No Mobile Devices Found"
+            print "Creating Mobile Device Group"
+            create_mobiledevice_group()
     else:
         print "Mobile Device Mode: Off"
 
-# Start the Computer import
-def computers():
-    if computersMode == True:
+
+def _computers():
+    """Start the computer process"""
+    if COMPUTERSMODE:
         print "---Starting the Computer pass---"
-        computers,status_code = getComputers()
-        if len(computers) != 0:
-            if status_code == 200:
-                print "Got some computers back!"
+        computers, status_code = get_computers()
+        if computers is not None:
+            if len(computers) != 0:
+                if status_code == 200:
+                    print "Got some computers back!"
 
+                computerstotal = len(computers)
+                counter = 0
+                for computer in computers:
+                    serialnumber = computer.get("serial_number")
+                    assettag = asset_lookup(serialnumber)
+                    update_computer_inventory(serialnumber, assettag)
+                    counter += 1
+                    print "Submitting %s of %s devices" % (counter, computerstotal)
+                print "---Finished importing asset tags for Computers---"
             else:
-                createComputerGroup()
-
-            computersTotal = len(computers)
-            counter = 0
-            for md in computers:
-                    serialNumber = md.get("serial_number")
-                    assetTag = assetLookup(serialNumber)
-                    updateComputerInventory(serialNumber,assetTag)
-                    counter = counter + 1
-                    print "Submitting %s of %s devices" % (counter,computersTotal)
-            print "---Finished importing asset tags for Computers---"
+                print "No Computers Found"
         else:
-            print "No Computers Found"
+            print "Creating the Computer Group"
+            create_computer_group()
+
     else:
         print "Computer Mode: off"
 
-# Create the computer group if it doesn't exist
-def createComputerGroup():
-    print "Stand by, creating the Smart Group and this does take a while in larger environments..."
-    body = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?><computer_group><name>_API-Asset-Tag-Importer</name><is_smart>true</is_smart><criteria><size>1</size><criterion><name>Asset Tag</name><priority>0</priority><and_or>and</and_or><search_type>is</search_type><value></value></criterion></criteria><computers/></computer_group>"
-    r = requests.post(jss_host + ':' + str(jss_port) + jss_path + '/JSSResource/computergroups/id/-1', auth=(jss_username,jss_password), data=body)
-    if r.status_code == 201:
-        print "Group created! Status code: %s " % r.status_code # This should be logging not printing
-        computers()
-    else:
-        print "Something went wrong. Status code: %s " % r.status_code # This should be logging not printing
-        print r.text
 
-# Create the mobile device group if it doesn't exist
-def createMobileDeviceGroup():
+def create_computer_group():
+    """Creates the computer group
+    :rtype: object
+    """
     print "Stand by, creating the Smart Group and this does take a while in larger environments..."
-    body = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?><mobile_device_group><name>_API-Asset-Tag-Importer</name><is_smart>true</is_smart><criteria><size>1</size><criterion><name>Asset Tag</name><priority>0</priority><and_or>and</and_or><search_type>is</search_type><value></value></criterion></criteria><mobile_devices/></mobile_device_group>"
-    r = requests.post(jss_host + ':' + str(jss_port) + jss_path + '/JSSResource/mobiledevicegroups/id/-1', auth=(jss_username,jss_password), data=body)
-    if r.status_code == 201:
-        print "Group created!. Status code: %s " % r.status_code # This should be logging not printing
+    body = ('<?xml version="1.0" encoding="UTF-8" standalone="no"?>'
+            '<computer_group><name>_API-Asset-Tag-Importer</name>'
+            '<is_smart>true</is_smart><criteria><size>1</size><criterion>'
+            '<name>Asset Tag</name><priority>0</priority><and_or>and</and_or>'
+            '<search_type>is</search_type><value></value></criterion></criteria>'
+            '<computers/></computer_group>')
+    request = requests.post(JSS_HOST + ':' + str(JSS_PORT) + JSS_PATH +
+                            '/JSSResource/computergroups/id/-1',
+                            auth=(JSS_USERNAME, JSS_PASSWORD), data=body)
+    if request.status_code == 201:
+        print "Group created! Status code: %s " % request.status_code
+        _computers()
+    else:
+        print "Something went wrong. Status code: %s " % request.status_code
+        print request.text
+
+
+def create_mobiledevice_group():
+    """Create the mobile device group if it doesn't exist"""
+    print ("Stand by, creating the Smart Group and this does take a "
+           "while in larger environments...")
+    body = ("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>"
+            "<mobile_device_group><name>_API-Asset-Tag-Importer</name>"
+            "<is_smart>true</is_smart><criteria><size>1</size><criterion>"
+            "<name>Asset Tag</name><priority>0</priority><and_or>and</and_or>"
+            "<search_type>is</search_type><value></value></criterion></criteria>"
+            "<mobile_devices/></mobile_device_group>")
+    request = requests.post('{0}:{1}{2}/JSSResource/mobiledevicegroups/id/-1'.format(
+        JSS_HOST, str(JSS_PORT), JSS_PATH),
+                            auth=(JSS_USERNAME, JSS_PASSWORD), data=body)
+    if request.status_code == 201:
+        print "Group created!. Status code: %s " % request.status_code
         # Jump back to the main program for mobile devices
-        mobileDevices()
+        _mobile_devices()
     else:
-        print "Something went wrong. Status code: %s " % r.status_code # This should be logging not printing
-        print r.text
+        print "Something went wrong. Status code: %s " % request.status_code
+        print request.text
 
-# Get the mobile devices without asset tags
-def getMobileDevices():
 
-    r = requests.get(jss_host + ':' + str(jss_port) + jss_path + '/JSSResource/mobiledevicegroups/name/_API-Asset-Tag-Importer', headers={'Accept': 'application/json'}, auth=(jss_username,jss_password))
+
+def get_mobile_devices():
+    """
+    Attempts to get the mobile devices without asset tags
+    :rtype: object
+    """
+    request = requests.get(
+        JSS_HOST + ':' + str(JSS_PORT) + JSS_PATH
+        + '/JSSResource/mobiledevicegroups/name/_API-Asset-Tag-Importer',
+        headers={'Accept': 'application/json'}, auth=(JSS_USERNAME, JSS_PASSWORD))
     try:
-        report_data = r.json()["mobile_device_group"]
-        return (report_data["mobile_devices"],r.status_code)
+        report_data = request.json()["mobile_device_group"]
+        return report_data["mobile_devices"], request.status_code
     except:
         report_data = None
-        return (report_data,r.status_code)
+        return report_data, request.status_code
 
 
-# Get the computers without asset tags
-def getComputers():
-
-    r = requests.get(jss_host + ':' + str(jss_port) + jss_path + '/JSSResource/computergroups/name/_API-Asset-Tag-Importer', headers={'Accept': 'application/json'}, auth=(jss_username,jss_password))
+def get_computers():
+    """Attempt to get the computers without asset tags"""
+    request = requests.get(
+        JSS_HOST + ':' + str(JSS_PORT) + JSS_PATH
+        + '/JSSResource/computergroups/name/_API-Asset-Tag-Importer',
+        headers={'Accept': 'application/json'}, auth=(JSS_USERNAME, JSS_PASSWORD))
     try:
-        report_data = r.json()["computer_group"]
-        return (report_data["computers"],r.status_code)
+        report_data = request.json()["computer_group"]
+        return report_data["computers"], request.status_code
     except:
         report_data = None
-        return (report_data,r.status_code)
+        return report_data, request.status_code
 
-# Read the csv
-def assetLookup(serial):
-    csvFile = os.path.join(os.path.dirname(__file__), csv_file_name)
-    file = open(csvFile)
-    filereader = csv.reader(file)
+
+def asset_lookup(serial):
+    """Lookup and try to find the asset tag"""
+    csv_file = os.path.join(os.path.dirname(__file__), CSV_FILE_NAME)
+    filename = open(csv_file)
+    filereader = csv.reader(filename)
     for row in filereader:
         try:
-            #print row[1]
             if row[1] == serial:
                 asset = row[0]
                 # strip dashs for my environment
@@ -208,38 +240,49 @@ def assetLookup(serial):
         except:
             continue
 
-# Submit the asset tag to the JSS
-def updateMobileDeviceInventory(serialNumber,assetTag):
 
-    if assetTag != None:
+def update_mobile_device_inventory(serialnumber, assettag):
+    """Submits the new asset tag to the JSS"""
+    if assettag is not None:
 
-        print "\tSubmitting command to update device " + serialNumber + "..."
+        print "\tSubmitting command to update device " + serialnumber + "..."
         try:
-            body = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?><mobile_device><general><asset_tag>%s</asset_tag></general></mobile_device>" % assetTag
-            r = requests.put(jss_host + ':' + jss_port + jss_path + '/JSSResource/mobiledevices/serialnumber/' + serialNumber, auth=(jss_username,jss_password), data=body)
-            #print r.text
+            body = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>" \
+                   "<mobile_device><general><asset_tag>%s</asset_tag></general>" \
+                   "</mobile_device>" % assettag
+            requests.put(
+                JSS_HOST + ':' + JSS_PORT + JSS_PATH +
+                '/JSSResource/mobiledevices/serialnumber/' + serialnumber,
+                auth=(JSS_USERNAME, JSS_PASSWORD), data=body)
+            # print r.text
             print ""
-        except:
-            print "\tUnknown error submitting PUT XML."
+        except requests.exceptions.HTTPError as error:
+            print "\t%s" % error
     else:
-        print "Skipping Serial Number: %s...Not found in csv" % serialNumber
+        print "Skipping Serial Number: %s...Not found in csv" % serialnumber
 
-def updateComputerInventory(serialNumber,assetTag):
 
-    if assetTag != None:
+def update_computer_inventory(serialnumber, assettag):
+    """Submits the new asset tag to the JSS"""
+    if assettag is not None:
 
-        print "\tSubmitting command to update device " + serialNumber + "..."
+        print "\tSubmitting command to update device " + serialnumber + "..."
         try:
-            body = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?><computer><general><asset_tag>%s</asset_tag></general></computer>" % assetTag
-            r = requests.put(jss_host + ':' + jss_port + jss_path + '/JSSResource/computers/serialnumber/' + serialNumber, auth=(jss_username,jss_password), data=body)
-            #print r.text
-            print ""
-        except:
-            print "\tUnknown error submitting PUT XML."
+            body = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>" \
+                   "<computer><general><asset_tag>%s</asset_tag></general>" \
+                   "</computer>" % assettag
+            requests.put(
+                JSS_HOST + ':' + JSS_PORT + JSS_PATH +
+                '/JSSResource/computers/serialnumber/' + serialnumber,
+                auth=(JSS_USERNAME, JSS_PASSWORD), data=body)
+
+        except requests.exceptions.HTTPError as error:
+            print "\t%s" % error
     else:
-        print "Skipping Serial Number: %s...Not found in csv" % serialNumber
+        print u'Skipping Serial Number: {0:s}...' \
+              u'Not found in csv'.format(serialnumber)
 
 
 if __name__ == '__main__':
-    computers()
-    mobileDevices()
+    _computers()
+    _mobile_devices()
