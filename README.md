@@ -1,7 +1,8 @@
 # jss-assettag-importer
 JSS Asset Tag Importer - Get those asset tags into your Casper JSS. For Mobile Devices and Computers!
-## JSS Asset Tag importer - v.2
+## JSS Asset Tag importer - v.3
 ## Authored by Brad Schmidt @bradschm on 12/29/2015
+## Updated formating and issue with detection of smart group on 07/01/2016
 
 ### DISCLAIMER
 I am not providing any kind of warranty. This has been thoroughly tested in my environments but I cannot guarantee that this script is not without bugs.
