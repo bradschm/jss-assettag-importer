@@ -41,7 +41,7 @@ import requests
 #####################################################
 
 #####################################################
-# TODO
+# TO DO
 # Add more logging (Actual logging instead of print)
 # Add gui? Prompt for values and file location
 # Once bug in the API for large advanced searches is fixes, switch to advanced
@@ -64,8 +64,8 @@ import requests
 # HARD CODED VALUES
 
 # JSS URL
-JSS_HOST = "http://127.0.0.1"
-JSS_PORT = "8080"
+JSS_HOST = "https://your.jss.com"
+JSS_PORT = "8443"
 JSS_PATH = ""  # Example: "jss" for a JSS at https://www.company.com:8443/jss
 
 # API User needs the following rights:
