@@ -64,8 +64,8 @@ import requests
 # HARD CODED VALUES
 
 # JSS URL
-JSS_HOST = "https://your.jss.com"
-JSS_PORT = "8443"
+JSS_HOST = "https://your.company.com"
+JSS_PORT = "443"
 JSS_PATH = ""  # Example: "jss" for a JSS at https://www.company.com:8443/jss
 
 # API User needs the following rights:
@@ -75,8 +75,8 @@ JSS_PATH = ""  # Example: "jss" for a JSS at https://www.company.com:8443/jss
 # 4. Update Mobile Device records
 
 # JSS API Username and Password
-JSS_USERNAME = "api_user"
-JSS_PASSWORD = "potato"
+JSS_USERNAME = "username"
+JSS_PASSWORD = "amazingpassword"
 
 # Place the csv in the same directory as the script.
 CSV_FILE_NAME = 'filename.csv'
@@ -95,12 +95,12 @@ MOBILEDEVICESMODE = True
 def _mobile_devices():
     """Starts the mobile device process"""
     if MOBILEDEVICESMODE:
-        print "---Starting the Mobile Device pass---"
+        print("---Starting the Mobile Device pass---")
         mobiledevices, status_code = get_mobile_devices()
         if mobiledevices is not None:
             if len(mobiledevices) != 0:
                 if status_code == 200:
-                    print "Got some mobile devices back!"
+                    print("Got some mobile devices back!")
 
                 mobiledevicestotal = len(mobiledevices)
                 counter = 0
@@ -109,26 +109,26 @@ def _mobile_devices():
                     assettag = asset_lookup(serialnumber)
                     update_mobile_device_inventory(serialnumber, assettag)
                     counter += 1
-                    print "Submitting %s of %s devices" % (counter, mobiledevicestotal)
-                print "---Finished importing asset tags for Mobile Devices---"
+                    print("Submitting %s of %s devices" % (counter, mobiledevicestotal))
+                print("---Finished importing asset tags for Mobile Devices---")
             else:
-                print "No Mobile Devices Found"
+                print("No Mobile Devices Found")
         else:
-            print "Creating Mobile Device Group"
+            print("Creating Mobile Device Group")
             create_mobiledevice_group()
     else:
-        print "Mobile Device Mode: Off"
+        print("Mobile Device Mode: Off")
 
 
 def _computers():
     """Start the computer process"""
     if COMPUTERSMODE:
-        print "---Starting the Computer pass---"
+        print("---Starting the Computer pass---")
         computers, status_code = get_computers()
         if computers is not None:
             if len(computers) != 0:
                 if status_code == 200:
-                    print "Got some computers back!"
+                    print("Got some computers back!")
 
                 computerstotal = len(computers)
                 counter = 0
@@ -137,23 +137,23 @@ def _computers():
                     assettag = asset_lookup(serialnumber)
                     update_computer_inventory(serialnumber, assettag)
                     counter += 1
-                    print "Submitting %s of %s devices" % (counter, computerstotal)
-                print "---Finished importing asset tags for Computers---"
+                    print( "Submitting %s of %s devices" % (counter, computerstotal))
+                print( "---Finished importing asset tags for Computers---")
             else:
-                print "No Computers Found"
+                print( "No Computers Found")
         else:
-            print "Creating the Computer Group"
+            print( "Creating the Computer Group")
             create_computer_group()
 
     else:
-        print "Computer Mode: off"
+        print( "Computer Mode: off")
 
 
 def create_computer_group():
     """Creates the computer group
     :rtype: object
     """
-    print "Stand by, creating the Smart Group and this does take a while in larger environments..."
+    print( "Stand by, creating the Smart Group and this does take a while in larger environments...")
     body = ('<?xml version="1.0" encoding="UTF-8" standalone="no"?>'
             '<computer_group><name>_API-Asset-Tag-Importer</name>'
             '<is_smart>true</is_smart><criteria><size>1</size><criterion>'
@@ -164,11 +164,11 @@ def create_computer_group():
                             '/JSSResource/computergroups/id/-1',
                             auth=(JSS_USERNAME, JSS_PASSWORD), data=body)
     if request.status_code == 201:
-        print "Group created! Status code: %s " % request.status_code
+        print( "Group created! Status code: %s " % request.status_code)
         _computers()
     else:
-        print "Something went wrong. Status code: %s " % request.status_code
-        print request.text
+        print( "Something went wrong. Status code: %s " % request.status_code)
+        print( request.text)
 
 
 def create_mobiledevice_group():
@@ -185,12 +185,12 @@ def create_mobiledevice_group():
         JSS_HOST, str(JSS_PORT), JSS_PATH),
                             auth=(JSS_USERNAME, JSS_PASSWORD), data=body)
     if request.status_code == 201:
-        print "Group created!. Status code: %s " % request.status_code
+        print( "Group created!. Status code: %s " % request.status_code)
         # Jump back to the main program for mobile devices
         _mobile_devices()
     else:
-        print "Something went wrong. Status code: %s " % request.status_code
-        print request.text
+        print( "Something went wrong. Status code: %s " % request.status_code)
+        print( request.text)
 
 
 
@@ -232,11 +232,14 @@ def asset_lookup(serial):
     filereader = csv.reader(filename)
     for row in filereader:
         try:
-            if row[1] == serial:
+            # if row[1] == serial:
+            if serial in row[1]:
+                print("found it")
                 asset = row[0]
+                print(asset)
                 # strip dashs for my environment
-                asset_tag = (asset.translate(None, "-"))
-                return asset_tag
+                # asset_tag = (asset.translate(None, "-"))
+                return asset
         except:
             continue
 
@@ -245,7 +248,7 @@ def update_mobile_device_inventory(serialnumber, assettag):
     """Submits the new asset tag to the JSS"""
     if assettag is not None:
 
-        print "\tSubmitting command to update device " + serialnumber + "..."
+        print( "\tSubmitting command to update device " + serialnumber + "...")
         try:
             body = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>" \
                    "<mobile_device><general><asset_tag>%s</asset_tag></general>" \
@@ -255,18 +258,18 @@ def update_mobile_device_inventory(serialnumber, assettag):
                 '/JSSResource/mobiledevices/serialnumber/' + serialnumber,
                 auth=(JSS_USERNAME, JSS_PASSWORD), data=body)
             # print r.text
-            print ""
+            print( "")
         except requests.exceptions.HTTPError as error:
-            print "\t%s" % error
+            print( "\t%s" % error)
     else:
-        print "Skipping Serial Number: %s...Not found in csv" % serialnumber
+        print( "Skipping Serial Number: %s...Not found in csv" % serialnumber)
 
 
 def update_computer_inventory(serialnumber, assettag):
     """Submits the new asset tag to the JSS"""
     if assettag is not None:
 
-        print "\tSubmitting command to update device " + serialnumber + "..."
+        print( "\tSubmitting command to update device " + serialnumber + "...")
         try:
             body = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>" \
                    "<computer><general><asset_tag>%s</asset_tag></general>" \
@@ -277,10 +280,10 @@ def update_computer_inventory(serialnumber, assettag):
                 auth=(JSS_USERNAME, JSS_PASSWORD), data=body)
 
         except requests.exceptions.HTTPError as error:
-            print "\t%s" % error
+            print( "\t%s" % error)
     else:
-        print u'Skipping Serial Number: {0:s}...' \
-              u'Not found in csv'.format(serialnumber)
+        print( u'Skipping Serial Number: {0:s}...' \
+              u'Not found in csv'.format(serialnumber))
 
 
 if __name__ == '__main__':
